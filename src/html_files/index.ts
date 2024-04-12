@@ -12,7 +12,7 @@ DataTypes.set('vmstat', {name: 'vmstat', hideClass: 'vmstatHide', trueId: 'vmsta
 DataTypes.set('disk_stats', {name: 'diskstat', hideClass: 'diskstatHide', trueId: 'diskstat_hide_yes', callback: diskStats});
 DataTypes.set('meminfo', {name: 'meminfo', hideClass: 'meminfoHide', trueId: 'meminfo_hide_yes', callback: meminfo});
 DataTypes.set('netstat', {name: 'netstat', hideClass: 'netstatHide', trueId: 'netstat_hide_yes', callback: netStat});
-DataTypes.set('interrupts', {name: 'interrupts', hideClass: '', trueId: '', callback: interrupts});
+DataTypes.set('interrupts', {name: 'interrupts', hideClass: 'interruptsHide', trueId: 'interrupts_hide_yes', callback: interrupts});
 DataTypes.set('cpu_utilization', {name: 'cpuutilization', hideClass: '', trueId: '', callback: cpuUtilization});
 DataTypes.set('system_info', {name: 'systeminfo', hideClass: '', trueId: '', callback: systemInfo});
 DataTypes.set('flamegraphs', {name: 'flamegraphs', hideClass: 'flamegraphsSelection', trueId: '', callback: flamegraphs});
