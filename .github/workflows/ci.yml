@@ -15,12 +15,8 @@ jobs:
   CI:
     strategy:
       matrix:
-        architecture: [ARM64, X86_64]
-        distribution: [Amazon Linux 2, Amazon Linux 2023, Ubuntu Linux]
-    runs-on:
-      - self-hosted
-      - ${{matrix.architecture}}
-      - ${{matrix.distribution}}
+        image: [al2-5.0-2xlarge, arm-3.0-large, ubuntu-7.0-2xlarge]
+    runs-on: codebuild-APerf-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.image }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
@@ -34,21 +30,24 @@ jobs:
         uses: dtolnay/rust-toolchain@2080da66123fcc7ec821c7597e9bc40af40d8af6 # 1.73.0
         with:
           components: rustfmt, clippy
+      - name: apt update on Ubuntu
+        if: ${{ contains(matrix.image, 'ubuntu') }}
+        run: sudo apt update
       - name: Install gcc on Ubuntu
-        if: ${{ matrix.distribution == 'Ubuntu Linux' }}
+        if: ${{ contains(matrix.image, 'ubuntu') }}
         run: sudo apt install -y build-essential
       - name: Install gcc on AL
-        if: ${{ contains(matrix.distribution, 'Amazon Linux') }}
+        if: ${{ contains(matrix.image, 'al2') || contains(matrix.image, 'arm') }}
         run: sudo yum install -y "@Development Tools"
       - name: Install NodeJs
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
           source ~/.nvm/nvm.sh && nvm install v16.16.0
       - name: Install musl on Ubuntu
-        if: ${{ matrix.distribution == 'Ubuntu Linux' }}
+        if: ${{ contains(matrix.image, 'ubuntu') }}
         run: sudo apt-get install -y musl-tools
       - name: Build & install musl on AL
-        if: ${{ contains(matrix.distribution, 'Amazon Linux') }}
+        if: ${{ contains(matrix.image, 'al2') || contains(matrix.image, 'arm') }}
         run: |
           wget https://git.musl-libc.org/cgit/musl/snapshot/musl-1.2.3.tar.gz
           tar xvf musl-1.2.3.tar.gz
@@ -59,17 +58,17 @@ jobs:
           cd ..
           rm -rf musl-1.2.3
       - name: Symlink musl-gcc on AL & ARM64
-        if: ${{ matrix.architecture == 'ARM64' && contains(matrix.distribution, 'Amazon Linux') }}
+        if: ${{ contains(matrix.image, 'arm') }}
         run: sudo ln -snf /usr/local/musl/bin/musl-gcc /usr/bin/aarch64-linux-musl-gcc
       - name: Symlink musl-gcc on AL & X86_64
-        if: ${{ matrix.architecture == 'X86_64' && contains(matrix.distribution, 'Amazon Linux') }}
+        if: ${{ contains(matrix.image, 'al2') }}
         run: sudo ln -snf /usr/local/musl/bin/musl-gcc /usr/bin/musl-gcc
 
       # Tests and static analysis
       - name: Set perf_event_paranoid to 0
         run: echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
       - name: Run tests
-        run: source ~/.nvm/nvm.sh && cargo test --verbose -- --nocapture --color always
+        run: source ~/.nvm/nvm.sh && RUST_BACKTRACE=1 cargo test --verbose -- --nocapture --color always
       - name: Run clippy
         run: source ~/.nvm/nvm.sh && cargo clippy --all-targets --all-features
       - name: Run rustfmt
@@ -81,11 +80,11 @@ jobs:
           rustup target add $(arch)-unknown-linux-musl
           source ~/.nvm/nvm.sh && cargo build --release --target $(arch)-unknown-linux-musl
       - name: Archive release artifacts
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.distribution == 'Ubuntu Linux' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && contains(matrix.image, 'ubuntu') }}
         run: tar -zcvf artifacts.tar.gz -C target/$(arch)-unknown-linux-musl/release aperf
       - name: Upload release artifacts
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.distribution == 'Ubuntu Linux' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && contains(matrix.image, 'ubuntu') }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.architecture }}-release-artifacts
+          name: ${{ matrix.image }}-release-artifacts
           path: artifacts.tar.gz

@@ -10,10 +10,7 @@ jobs:
   Build:
     uses: ./.github/workflows/ci.yml
   Release:
-    runs-on:
-      - self-hosted
-      - ARM64
-      - Ubuntu Linux
+    runs-on: codebuild-APerf-${{ github.run_id }}-${{ github.run_attempt }}-arm-3.0-large
     permissions:
       contents: write
     needs:
@@ -33,14 +30,14 @@ jobs:
         run: |
           name=aperf-${{ github.ref_name }}-x86_64
           mkdir "$name"
-          tar -zxvf X86_64-release-artifacts/artifacts.tar.gz -C "$name"
+          tar -zxvf ubuntu-7.0-2xlarge-release-artifacts/artifacts.tar.gz -C "$name"
           tar -zcvf "$name".tar.gz "$name"
-      - name: Tar aarch64 artifacts
-        run: |
-          name=aperf-${{ github.ref_name }}-aarch64
-          mkdir "$name"
-          tar -zxvf ARM64-release-artifacts/artifacts.tar.gz -C "$name"
-          tar -zcvf "$name".tar.gz "$name"
+#      - name: Tar aarch64 artifacts
+#        run: |
+#          name=aperf-${{ github.ref_name }}-aarch64
+#          mkdir "$name"
+#          tar -zxvf ARM64-release-artifacts/artifacts.tar.gz -C "$name"
+#          tar -zcvf "$name".tar.gz "$name"
 
       # Attach them to the release
       - name: Upload x86_64 artifacts.
@@ -50,10 +47,10 @@ jobs:
           file: ./aperf-${{ github.ref_name }}-x86_64.tar.gz
           tag: ${{ github.ref }}
           asset_name: aperf-${{ github.ref_name }}-x86_64.tar.gz
-      - name: Upload aarch64 artifacts
-        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./aperf-${{ github.ref_name }}-aarch64.tar.gz
-          tag: ${{ github.ref }}
-          asset_name: aperf-${{ github.ref_name }}-aarch64.tar.gz
+#      - name: Upload aarch64 artifacts
+#        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df # v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: ./aperf-${{ github.ref_name }}-aarch64.tar.gz
+#          tag: ${{ github.ref }}
+#          asset_name: aperf-${{ github.ref_name }}-aarch64.tar.gz
