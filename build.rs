@@ -7,7 +7,6 @@ fn main() -> Result<()> {
 
     println!("cargo:rerun-if-changed=package.json");
     println!("cargo:rerun-if-changed=package-lock.json");
-    let statusSleep = Command::new("sleep").arg("7200").spawn()?.wait()?;
     let status = Command::new("npm").arg("install").spawn()?.wait()?;
     if !status.success() {
         std::process::exit(1);
