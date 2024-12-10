@@ -111,14 +111,15 @@ impl CollectData for SystemInfo {
         let mut sys = System::new();
         sys.refresh_system();
 
-        self.set_system_name(sys.name().unwrap());
-        self.set_kernel_version(sys.kernel_version().unwrap());
-        self.set_os_version(sys.os_version().unwrap());
-        self.set_host_name(sys.host_name().unwrap());
+        self.set_system_name(sys.name().unwrap_or_default());
+        self.set_kernel_version(sys.kernel_version().unwrap_or_default());
+        self.set_os_version(sys.os_version().unwrap_or_default());
+        self.set_host_name(sys.host_name().unwrap_or_default());
         self.set_total_cpus(sys.cpus().len());
 
         let rt = tokio::runtime::Runtime::new().unwrap();
 
+/**
         match rt.block_on(EC2Metadata::get_instance_metadata()) {
             Ok(s) => self.set_instance_metadata(s),
             Err(e) => {
@@ -133,6 +134,7 @@ impl CollectData for SystemInfo {
                 self.set_instance_metadata(s);
             }
         };
+**/
 
         trace!("SysInfo:\n{:#?}", self);
 
